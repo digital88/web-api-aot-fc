@@ -1,0 +1,59 @@
+services:
+  migrate-test-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    depends_on:
+      - database
+    environment:
+      EF_BUNDLE_CONNECTION: "Host=test-api-database;Port=5432;Database=todos_db;Username=todos_db_user;Password=todos_db_user_password;"
+  test-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    pull_policy: build
+    environment:
+      ASPNETCORE_HTTP_PORTS: "8080"
+      FusionCache__RedisCacheOptions__ConfigurationOptions__EndPoints__0: "test-api-cache:6379"
+      FusionCache__RedisBackplaneOptions__ConfigurationOptions__EndPoints__0: "test-api-cache:6379"
+      ConnectionStrings__Default: "Host=test-api-database;Port=5432;Database=todos_db;Username=todos_db_user;Password=todos_db_user_password;"
+    ports:
+      - 8080:8080
+    depends_on:
+      database:
+      cache:
+      migrate-test-api:
+        condition: service_completed_successfully
+  database:
+    container_name: test-api-database
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: "todos_db"
+      POSTGRES_USER: "todos_db_user"
+      POSTGRES_PASSWORD: "todos_db_user_password"
+    volumes:
+      - test-api-pg-data:/var/lib/postgresql/data
+    shm_size: 256MB
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-d", "todos_db", "-U", "todos_db_user" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  cache:
+    container_name: test-api-cache
+    image: redis/redis-stack:7.2.0-v10
+    ports:
+      - 36379:6379
+      - 38001:8001 # redis insight
+    volumes:
+      - test-api-redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
