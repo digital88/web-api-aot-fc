@@ -1,5 +1,3 @@
-using Riok.Mapperly.Abstractions;
-
 namespace Test.Api.Data.Mapping;
 
 public static partial class TodosMapper

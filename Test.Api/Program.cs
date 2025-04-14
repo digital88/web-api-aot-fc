@@ -31,7 +31,8 @@ builder.Services.AddDbContext<TodosContext>(
 builder.Services.AddTransient<IValidator<CreateTodoDto>, CreateTodoValidatior>();
 builder.Services.AddScoped<ITodosService, TodosService>();
 
-var appsettingsKeyFc = "FusionCache";
+//
+// var appsettingsKeyFc = "FusionCache"; ..
 //
 // This bindings directly from appsettings to FusionCacheOptions / FusionCacheEntryOptions do not work in AOT.
 //
@@ -45,32 +46,32 @@ var appsettingsKeyFc = "FusionCache";
 //     .GetSection(nameof(FusionCacheEntryOptions))
 //     .Get<FusionCacheEntryOptions>() ?? throw new ConfigurationException($"{nameof(FusionCacheEntryOptions)} is not set."); ..
 //
-var redisCacheConfigurationOptions = builder.Configuration
-    .GetSection(appsettingsKeyFc)
-    .GetSection(nameof(RedisCacheOptions))
-    .Get<RedisCacheConfigurationOptions>() ?? throw new ConfigurationException($"{nameof(RedisCacheConfigurationOptions)} is not set.");
-var redisBackplaneConfigurationOptions = builder.Configuration
-    .GetSection(appsettingsKeyFc)
-    .GetSection(nameof(RedisBackplaneOptions))
-    .Get<RedisCacheConfigurationOptions>() ?? throw new ConfigurationException($"{nameof(RedisCacheConfigurationOptions)} is not set.");
-var redisCacheOptions = new RedisCacheOptions
-{
-    ConfigurationOptions = new()
-    {
-        Ssl = redisCacheConfigurationOptions.Ssl,
-        Password = redisCacheConfigurationOptions.Password,
-        EndPoints = [.. redisCacheConfigurationOptions.GetDnsEndPoints()]
-    }
-};
-var redisBackplaneOptions = new RedisBackplaneOptions
-{
-    ConfigurationOptions = new()
-    {
-        Ssl = redisBackplaneConfigurationOptions.Ssl,
-        Password = redisBackplaneConfigurationOptions.Password,
-        EndPoints = [.. redisBackplaneConfigurationOptions.GetDnsEndPoints()]
-    }
-};
+// var redisCacheConfigurationOptions = builder.Configuration
+//     .GetSection(appsettingsKeyFc)
+//     .GetSection(nameof(RedisCacheOptions))
+//     .Get<RedisCacheConfigurationOptions>() ?? throw new ConfigurationException($"{nameof(RedisCacheConfigurationOptions)} is not set."); ..
+// var redisBackplaneConfigurationOptions = builder.Configuration
+//     .GetSection(appsettingsKeyFc)
+//     .GetSection(nameof(RedisBackplaneOptions))
+//     .Get<RedisCacheConfigurationOptions>() ?? throw new ConfigurationException($"{nameof(RedisCacheConfigurationOptions)} is not set."); ..
+// var redisCacheOptions = new RedisCacheOptions
+// {
+//     ConfigurationOptions = new()
+//     {
+//         Ssl = redisCacheConfigurationOptions.Ssl,
+//         Password = redisCacheConfigurationOptions.Password,
+//         EndPoints = [.. redisCacheConfigurationOptions.GetDnsEndPoints()]
+//     }
+// };
+// var redisBackplaneOptions = new RedisBackplaneOptions
+// {
+//     ConfigurationOptions = new()
+//     {
+//         Ssl = redisBackplaneConfigurationOptions.Ssl,
+//         Password = redisBackplaneConfigurationOptions.Password,
+//         EndPoints = [.. redisBackplaneConfigurationOptions.GetDnsEndPoints()]
+//     }
+// };
 builder.Services.AddMemoryCache();
 builder.Services.AddFusionCache()
     .WithOptions(new FusionCacheOptions()
@@ -89,9 +90,11 @@ builder.Services.AddFusionCache()
         DistributedCacheHardTimeout = TimeSpan.FromSeconds(20),
         AllowBackgroundDistributedCacheOperations = true,
         JitterMaxDuration = TimeSpan.FromSeconds(2),
-    })
-    .WithDistributedCache(new RedisCache(redisCacheOptions))
-    .WithBackplane(new RedisBackplane(redisBackplaneOptions));
+    });
+// .WithDistributedCache(new RedisCache(redisCacheOptions))
+// .WithBackplane(new RedisBackplane(redisBackplaneOptions));
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.MapHealthChecks("/healthz");
@@ -115,7 +118,7 @@ todosApi.MapGet("/", async Task<Ok<List<Todo>>> (
     var todos = await todosService.GetTodosAsync(getRequest, cancellationToken);
     return TypedResults.Ok(todos);
 });
-todosApi.MapGet("/{id:guid}", async Task<Results<Ok<Todo>, NotFound>> (
+todosApi.MapGet("/{id:long}", async Task<Results<Ok<Todo>, NotFound>> (
     [FromRoute] long id,
     ITodosService todosService,
     CancellationToken cancellationToken) =>

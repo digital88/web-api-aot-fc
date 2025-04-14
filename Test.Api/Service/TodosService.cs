@@ -59,9 +59,10 @@ public sealed class TodosService : ITodosService
     {
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         await using var dbContext = scope.ServiceProvider.GetRequiredService<TodosContext>();
-        return await dbContext.Set<TodoEntity>()
-            .ProjectToTodo()
-            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        var items = await dbContext.Database
+            .SqlQueryRaw<Todo>("select \"Id\",\"Title\",\"DueBy\",\"IsComplete\" from todos.todos where \"Id\" = {Id}", [id])
+            .ToListAsync(cancellationToken);
+        return items.FirstOrDefault();
     }
 
     private async Task<List<Todo>> GetTodosFromDatabase(PagingGet getRequest, CancellationToken cancellationToken)

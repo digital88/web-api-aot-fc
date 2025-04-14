@@ -16,7 +16,7 @@ namespace Test.Api.Migrations.EfModel
     public partial class TodosContextModel
     {
         private TodosContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("4b1215f4-30fe-4bd9-8fcd-23214fd57aa0"), entityTypeCount: 1)
+            : base(skipDetectChanges: false, modelId: new Guid("24f63429-f27c-4e48-a406-d52259a7d975"), entityTypeCount: 1)
         {
         }
 
@@ -27,7 +27,7 @@ namespace Test.Api.Migrations.EfModel
             TodoEntityEntityType.CreateAnnotations(todoEntity);
 
             AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-            AddAnnotation("ProductVersion", "9.0.4");
+            AddAnnotation("ProductVersion", "9.0.3");
             AddAnnotation("Relational:MaxIdentifierLength", 63);
             AddRuntimeAnnotation("Relational:RelationalModelFactory", () => CreateRelationalModel());
         }

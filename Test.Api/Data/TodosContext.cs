@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Test.Api.Migrations.EfModel;
 
 namespace Test.Api.Data;
 
@@ -21,5 +22,19 @@ public sealed class TodosContext : DbContext
         modelBuilder.ApplyConfiguration(new TodoEntityConfiguration());
 
         base.OnModelCreating(modelBuilder);
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var cfg = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables()
+                .Build();
+            optionsBuilder.UseNpgsql(cfg.GetConnectionString("Default")!)
+                .UseModel(TodosContextModel.Instance);
+        }
     }
 }
