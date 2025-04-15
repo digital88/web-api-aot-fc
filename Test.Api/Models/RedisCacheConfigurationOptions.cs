@@ -1,4 +1,6 @@
 using System.Net;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
+using ZiggyCreatures.Caching.Fusion.Backplane.StackExchangeRedis;
 
 namespace Test.Api.Models;
 
@@ -32,5 +34,34 @@ public sealed class RedisCacheConfigurationOptions
             if (!int.TryParse(hostPortStringSplit[1], out var port)) return;
             Port = port;
         }
+    }
+}
+
+public static class RedisCacheConfigurationOptionsExtensions
+{
+    public static RedisCacheOptions AsRedisCacheOptions(this RedisCacheConfigurationOptions opts)
+    {
+        return new RedisCacheOptions
+        {
+            ConfigurationOptions = new()
+            {
+                Ssl = opts.Ssl,
+                Password = opts.Password,
+                EndPoints = [.. opts.GetDnsEndPoints()]
+            }
+        };
+    }
+
+    public static RedisBackplaneOptions AsRedisBackplaneOptions(this RedisCacheConfigurationOptions opts)
+    {
+        return new RedisBackplaneOptions
+        {
+            ConfigurationOptions = new()
+            {
+                Ssl = opts.Ssl,
+                Password = opts.Password,
+                EndPoints = [.. opts.GetDnsEndPoints()]
+            }
+        };
     }
 }

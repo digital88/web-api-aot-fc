@@ -1,6 +1,6 @@
 namespace Test.Api.Data;
 
-public sealed class TodoEntity
+public class TodoEntity
 {
     public long Id { get; set; }
     public string? Title { get; set; }

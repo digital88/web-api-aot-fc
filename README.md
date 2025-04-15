@@ -1,22 +1,16 @@
-EF Core models must be compiled. Run the following command:
+How to start:
 
+1. ```docker compose up```
+2. ```./scripts/run-migrations.sh``` (check connection string).
+3. curl or Postman some requests.
+4. 
+
+When debugging, EF Core models must be compiled. Run the following command before starting debug session:
 ```sh
-dotnet ef dbcontext optimize --project Test.Api/Test.Api.csproj --output-dir ./Migrations/EfModel --precompile-queries --nativeaot
+dotnet ef dbcontext optimize --project ./Test.Api/Test.Api.csproj --output-dir ./EfModel --precompile-queries --nativeaot
 ```
 
-```sh
-dotnet publish --ucr Test.Api/Test.Api.csproj -c Release -o ./app
-```
-
-```sh
-cd ./Test.Api
-
-dotnet ef migrations bundle --self-contained -o ./efbundle --force
-
-./efbundle --verbose --connection "Host=localhost;Port=5432;Database=todos_db;Username=todos_db_user;Password=todos_db_user_password;"
-```
-
-Create TODO:
+Create Todo:
 ```sh
 curl --location 'http://localhost:8080/todos' \
 --header 'Content-Type: application/json' \
@@ -24,4 +18,8 @@ curl --location 'http://localhost:8080/todos' \
     "title": "test",
     "isComplete": false
 }'
+```
+Get Todo:
+```sh
+curl --location 'http://localhost:8080/todo/1'
 ```

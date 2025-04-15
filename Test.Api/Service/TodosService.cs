@@ -37,7 +37,7 @@ public sealed class TodosService : ITodosService
     {
         return await _fusionCache.GetOrSetAsync(
             $"todo:id-{id}",
-            async (ct) => await GetTodoFromDatabase(id, ct),
+            async (_) => await GetTodoFromDatabase(id),
             default,
             (FusionCacheEntryOptions)null!,
             cancellationToken
@@ -46,34 +46,36 @@ public sealed class TodosService : ITodosService
 
     public async Task<List<Todo>> GetTodosAsync(PagingGet getRequest, CancellationToken cancellationToken)
     {
+        var pageSize = (int)getRequest.PageSize;
+        var page = (int)getRequest.Page;
         return await _fusionCache.GetOrSetAsync(
-            $"todos:page-{getRequest.Page}:size-{getRequest.PageSize}",
-            async (ct) => await GetTodosFromDatabase(getRequest, ct),
+            $"todos:page-{page}:size-{pageSize}",
+            async (_) =>
+            {
+                await using var scope = _serviceScopeFactory.CreateAsyncScope();
+                await using var dbContext = scope.ServiceProvider.GetRequiredService<TodosContext>();
+                var entities = await dbContext
+                    .Set<TodoEntity>()
+                    .OrderBy(e => e.CreatedAt)
+                    .Skip(page * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync(CancellationToken.None);
+                return TodosMapper.MapToTodo(entities);
+            },
             default,
             (FusionCacheEntryOptions)null!,
             cancellationToken
         );
     }
 
-    private async Task<Todo?> GetTodoFromDatabase(long id, CancellationToken cancellationToken)
+    private async Task<Todo?> GetTodoFromDatabase(long id)
     {
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         await using var dbContext = scope.ServiceProvider.GetRequiredService<TodosContext>();
-        var items = await dbContext.Database
-            .SqlQueryRaw<Todo>("select \"Id\",\"Title\",\"DueBy\",\"IsComplete\" from todos.todos where \"Id\" = {Id}", [id])
-            .ToListAsync(cancellationToken);
-        return items.FirstOrDefault();
-    }
-
-    private async Task<List<Todo>> GetTodosFromDatabase(PagingGet getRequest, CancellationToken cancellationToken)
-    {
-        await using var scope = _serviceScopeFactory.CreateAsyncScope();
-        await using var dbContext = scope.ServiceProvider.GetRequiredService<TodosContext>();
-        return await dbContext.Set<TodoEntity>()
-            .OrderBy(e => e.CreatedAt)
-            .Skip((int)(getRequest.Page * getRequest.PageSize))
-            .Take((int)getRequest.PageSize)
-            .ProjectToTodo()
-            .ToListAsync(cancellationToken);
+        var _id = id;
+        var entity = await dbContext
+            .Set<TodoEntity>()
+            .FirstOrDefaultAsync(e => e.Id == _id);
+        return TodosMapper.MapToTodo(entity);
     }
 }

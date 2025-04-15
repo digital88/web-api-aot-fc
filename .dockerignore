@@ -27,3 +27,5 @@ README.md
 .editorconfig
 .gitattributes
 **/gl-sbom-*.cdx.json
+/app/**
+/Test.Api/EfModel/**

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Test.Api.Migrations.EfModel;
+using Test.Api.Common;
 
 namespace Test.Api.Data;
 
@@ -30,11 +30,12 @@ public sealed class TodosContext : DbContext
         {
             var cfg = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables()
+                .AddJsonFile("appsettings.Development.json", true)
                 .Build();
-            optionsBuilder.UseNpgsql(cfg.GetConnectionString("Default")!)
-                .UseModel(TodosContextModel.Instance);
+            var connectionString = cfg.GetConnectionString("Default") ??
+                throw new ConfigurationException("Connection string is not set.");
+            optionsBuilder.UseNpgsql(connectionString);
         }
     }
 }

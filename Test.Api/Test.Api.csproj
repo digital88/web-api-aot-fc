@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <RootNamespace>Test.Api</RootNamespace>
     <LangVersion>latest</LangVersion>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
@@ -8,13 +9,18 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
     <InterceptorsNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.EntityFrameworkCore.GeneratedInterceptors</InterceptorsNamespaces>
-    <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.Extensions.Configuration.Binder.SourceGeneration</InterceptorsPreviewNamespaces>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" >
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tasks" >
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -22,6 +28,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="ZiggyCreatures.FusionCache" />
     <PackageReference Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" />
+    <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" />
   </ItemGroup>
 
 </Project>
