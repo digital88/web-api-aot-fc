@@ -12,7 +12,7 @@ public class PagingGet
     }
 
     [FromQuery]
-    public uint Page { get; set; }
+    public long RecordId { get; set; }
 
     private uint _pageSize = MAX_PAGE_SIZE;
     [FromQuery]
@@ -29,16 +29,4 @@ public class PagingGet
                 _pageSize = MAX_PAGE_SIZE;
         }
     }
-}
-
-public sealed class PagingGetResponse<TData> : PagingGet
-{
-    public PagingGetResponse(IEnumerable<TData> data, uint page, uint pageSize)
-    {
-        Page = page;
-        PageSize = pageSize;
-        Data = [.. data];
-    }
-
-    public IReadOnlyCollection<TData> Data { get; }
 }

@@ -44,30 +44,6 @@ public sealed class TodosService : ITodosService
         );
     }
 
-    public async Task<List<Todo>> GetTodosAsync(PagingGet getRequest, CancellationToken cancellationToken)
-    {
-        var pageSize = (int)getRequest.PageSize;
-        var page = (int)getRequest.Page;
-        return await _fusionCache.GetOrSetAsync(
-            $"todos:page-{page}:size-{pageSize}",
-            async (_) =>
-            {
-                await using var scope = _serviceScopeFactory.CreateAsyncScope();
-                await using var dbContext = scope.ServiceProvider.GetRequiredService<TodosContext>();
-                var entities = await dbContext
-                    .Set<TodoEntity>()
-                    .OrderBy(e => e.CreatedAt)
-                    .Skip(page * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync(CancellationToken.None);
-                return TodosMapper.MapToTodo(entities);
-            },
-            default,
-            (FusionCacheEntryOptions)null!,
-            cancellationToken
-        );
-    }
-
     private async Task<Todo?> GetTodoFromDatabase(long id)
     {
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
@@ -77,5 +53,29 @@ public sealed class TodosService : ITodosService
             .Set<TodoEntity>()
             .FirstOrDefaultAsync(e => e.Id == _id);
         return TodosMapper.MapToTodo(entity);
+    }
+
+    public async Task<Todo[]> GetTodosAsync(PagingGet getRequest, CancellationToken cancellationToken)
+    {
+        var pageSize = (int)getRequest.PageSize;
+        var recId = getRequest.RecordId;
+        return await _fusionCache.GetOrSetAsync(
+            $"todos:recId-{recId}:size-{pageSize}",
+            async (_) =>
+            {
+                await using var scope = _serviceScopeFactory.CreateAsyncScope();
+                await using var dbContext = scope.ServiceProvider.GetRequiredService<TodosContext>();
+                var entities = await dbContext
+                    .Set<TodoEntity>()
+                    .OrderBy(e => e.CreatedAt)
+                    .Where(e => e.Id > recId)
+                    .Take(pageSize)
+                    .ToListAsync(CancellationToken.None);
+                return TodosMapper.MapToTodo(entities);
+            },
+            default,
+            (FusionCacheEntryOptions)null!,
+            cancellationToken
+        );
     }
 }

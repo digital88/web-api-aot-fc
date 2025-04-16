@@ -2,9 +2,9 @@ namespace Test.Api.Data.Mapping;
 
 public static class TodosMapper
 {
-    public static List<Todo> MapToTodo(this List<TodoEntity> entities)
+    public static Todo[] MapToTodo(this List<TodoEntity> entities)
     {
-        return entities.Select(e => new Todo(e.Id, e.Title, e.DueBy, e.IsComplete)).ToList();
+        return entities.Select(e => new Todo(e.Id, e.Title, e.DueBy, e.IsComplete)).ToArray();
     }
     public static Todo? MapToTodo(this TodoEntity? entity)
     {

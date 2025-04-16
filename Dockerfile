@@ -15,10 +15,14 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
   -o /app \
   --ucr
 
-FROM busybox:glibc AS final
+FROM debian:bookworm-slim AS final
 HEALTHCHECK --interval=10s --timeout=30s --start-period=5s --retries=3 CMD [ "nc", "-vz", "-w", "1", "localhost", "8080" ]
-RUN addgroup -g 10000 app \
-    && adduser -G app -u 10000 app -D
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+  libssl-dev \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* \
+  && addgroup --gid 10000 app \
+  && adduser --gid 10000 --uid 10000 app
 WORKDIR /app
 COPY --from=build --chown=app:app --chmod=0555 /app/Test.Api .
 USER app

@@ -24,24 +24,16 @@ builder.Services.AddScoped<ITodosService, TodosService>();
 builder.Services.AddHealthChecks();
 
 // FUSION CACHE SETUP
-var FusionCacheKey = "FusionCache";
-var rcco = new RedisCacheConfigurationOptions();
-builder.Configuration
-    .GetSection(FusionCacheKey)
-    .GetSection(nameof(RedisCacheOptions))
-    .Bind(rcco);
-var rccoBackplane = new RedisCacheConfigurationOptions();
-builder.Configuration
-    .GetSection(FusionCacheKey)
-    .GetSection(nameof(RedisBackplaneOptions))
-    .Bind(rccoBackplane);
 builder.Services.AddMemoryCache();
-builder.Services.AddFusionCache()
+var jso = new System.Text.Json.JsonSerializerOptions();
+jso.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+var fcBuilder = builder.Services.AddFusionCache();
+fcBuilder
+    .WithSerializer(new FusionCacheSystemTextJsonSerializer(jso))
     .WithOptions(new FusionCacheOptions()
     {
         DistributedCacheCircuitBreakerDuration = TimeSpan.FromSeconds(10)
     })
-    .WithSerializer(new FusionCacheSystemTextJsonSerializer())
     .WithDefaultEntryOptions(new FusionCacheEntryOptions()
     {
         Duration = TimeSpan.FromMinutes(10),
@@ -54,7 +46,20 @@ builder.Services.AddFusionCache()
         DistributedCacheHardTimeout = TimeSpan.FromSeconds(20),
         AllowBackgroundDistributedCacheOperations = true,
         JitterMaxDuration = TimeSpan.FromSeconds(2),
-    })
+    });
+
+var FusionCacheKey = "FusionCache";
+var rcco = new RedisCacheConfigurationOptions();
+builder.Configuration
+    .GetSection(FusionCacheKey)
+    .GetSection(nameof(RedisCacheOptions))
+    .Bind(rcco);
+var rccoBackplane = new RedisCacheConfigurationOptions();
+builder.Configuration
+    .GetSection(FusionCacheKey)
+    .GetSection(nameof(RedisBackplaneOptions))
+    .Bind(rccoBackplane);
+fcBuilder
     .WithDistributedCache(new RedisCache(rcco.AsRedisCacheOptions()))
     .WithBackplane(new RedisBackplane(rccoBackplane.AsRedisBackplaneOptions()));
 // FUSION CACHE SETUP END
@@ -75,7 +80,7 @@ todosApi.MapPost("/", async Task<Created<long>> (
     var id = await todosService.CreateTodoAsync(createTodoDto, cancellationToken);
     return TypedResults.Created("/todos/{id}", id);
 });
-todosApi.MapGet("/", async Task<Ok<List<Todo>>> (
+todosApi.MapGet("/", async Task<Ok<Todo[]>> (
     [AsParameters] PagingGet getRequest,
     ITodosService todosService,
     CancellationToken cancellationToken) =>

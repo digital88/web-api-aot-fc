@@ -7,5 +7,5 @@ public interface ITodosService
 {
     Task<long> CreateTodoAsync(CreateTodoDto createTodoDto, CancellationToken cancellationToken);
     Task<Todo?> GetTodoAsync(long id, CancellationToken cancellationToken);
-    Task<List<Todo>> GetTodosAsync(PagingGet getRequest, CancellationToken cancellationToken);
+    Task<Todo[]> GetTodosAsync(PagingGet getRequest, CancellationToken cancellationToken);
 }
